@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💼Smart Job Application Tracker</title>
+</head>
+<body>
+  <h1>💼Smart Job Application Tracker</h1>
+
+  <input type="text" id="company" placeholder="Company">
+  <input type="text" id="title" placeholder="Title">
+  <select id="selectType">
+    <option value="applied">Applied</option>
+    <option value="interview">Interview</option>
+    <option value="hiered">Hiered</option>
+    <option value="rejected">Rejected</option>
+  </select>
+  <button onclick="Add()">ADD</button>
+
+  <input type="text" id="search" oninput="search()" placeholder="Search">
+  <div id="warning"></div>
+
+  <!-- 📊 Summary -->
+  <div id="summary" style="margin: 15px 0; font-weight: bold;"></div>
+
+  <div id="output"></div>
+
+  <script>
+    window.onload = function () {
+      let work = JSON.parse(localStorage.getItem("output")) || [];
+      display(work);
+    }
+
+    function Add() {
+      let company = document.getElementById("company").value.trim();
+      let title = document.getElementById("title").value.trim();
+      let type = document.getElementById("selectType").value;
+      let warning = document.getElementById("warning");
+
+      if (company === "" || title === "") {
+        warning.textContent = "Please enter a correct value";
+        warning.style.color = "red";
+        return;
+      }
+
+      let work = JSON.parse(localStorage.getItem("output")) || [];
+      let seen = work.some(item =>
+        item.company.toLowerCase() === company.toLowerCase() &&
+        item.title.toLowerCase() === title.toLowerCase()
+      );
+
+      if (seen) {
+        warning.textContent = `"${company} - ${title}" already exists`;
+        warning.style.color = "red";
+        return;
+      }
+
+      let newEntry = {
+        company: company,
+        title: title,
+        selection: type
+      };
+
+      work.push(newEntry);
+      localStorage.setItem("output", JSON.stringify(work));
+      display(work);
+
+      warning.textContent = "";
+      document.getElementById("company").value = "";
+      document.getElementById("title").value = "";
+    }
+
+    function display(work) {
+      let output = document.getElementById("output");
+      output.innerHTML = "";
+
+      // 📊 STATUS SUMMARY
+      let summary = {
+        applied: 0,
+        interview: 0,
+        hiered: 0,
+        rejected: 0
+      };
+
+      work.forEach(item => {
+        summary[item.selection]++;
+      });
+
+      let summaryDiv = document.getElementById("summary");
+      summaryDiv.innerHTML = `
+        📊 Status Summary — 
+        Applied: ${summary.applied} |
+        Interview: ${summary.interview} |
+        Hired: ${summary.hiered} |
+        Rejected: ${summary.rejected}
+      `;
+
+      work.forEach((item, index) => {
+        let div = document.createElement("div");
+        div.innerHTML = `
+          <strong>💼Company:</strong> ${item.company}<br>
+          <strong>Title:</strong> ${item.title}<br>
+          <strong>Status:</strong> ${item.selection}
+        `;
+
+        let dbtn = document.createElement("button");
+        dbtn.textContent = "❌ Delete";
+        dbtn.style.color = "white";
+        dbtn.style.backgroundColor = "red";
+        dbtn.onclick = function () {
+          work.splice(index, 1);
+          localStorage.setItem("output", JSON.stringify(work));
+          display(work);
+        };
+
+        div.appendChild(dbtn);
+        div.style.border = "2px solid gray";
+        div.style.margin = "10px 0";
+        div.style.padding = "10px";
+        div.style.borderRadius = "8px";
+
+        // 🎨 Color based on status
+        if (item.selection === "applied") {
+          div.style.borderColor = "orange";
+          div.style.backgroundColor = "#fff3e0";
+        } else if (item.selection === "interview") {
+          div.style.borderColor = "blue";
+          div.style.backgroundColor = "#e3f2fd";
+        } else if (item.selection === "hiered") {
+          div.style.borderColor = "green";
+          div.style.backgroundColor = "#e8f5e9";
+        } else if (item.selection === "rejected") {
+          div.style.borderColor = "red";
+          div.style.backgroundColor = "#ffebee";
+        }
+
+        output.appendChild(div);
+      });
+    }
+
+    function search() {
+      let keyword = document.getElementById("search").value.toLowerCase();
+      let work = JSON.parse(localStorage.getItem("output")) || [];
+      let filtered = work.filter(item =>
+        item.company.toLowerCase().includes(keyword) ||
+        item.title.toLowerCase().includes(keyword) ||
+        item.selection.toLowerCase().includes(keyword)
+      );
+      display(filtered);
+    }
+  </script>
+</body>
+</html>
