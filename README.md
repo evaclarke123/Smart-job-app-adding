@@ -1,1 +1,0 @@
-# Smart-job-app-adding
